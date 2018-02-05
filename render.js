@@ -6,34 +6,42 @@ function main() {
     let depth = depthSlider.value;
     //setupWebGL is defined in webgl-utils.js
     // noinspection JSAnnotator
-    let gl = WebGLUtils.setupWebGL(canvas);
-    var xAdd = 0.1;
-    var yAdd = 0.1;
+    var gl = WebGLUtils.setupWebGL(canvas);
+    var xAdd = 0.0;
+    var yAdd = 0.0;
 
-    var u_Translation = gl.getUniformLocation(gl.program, 'u_Translation');
-    drawProgram(gl,canvas,depth);
+    drawProgram(gl,canvas,depth, xAdd, yAdd);
     // noinspection JSAnnotator
     depthSlider.addEventListener('change', event => {
         depth = depthSlider.value;
-        drawProgram(gl,canvas,depth);
+        drawProgram(gl,canvas,depth, xAdd, yAdd);
     });
 
     window.addEventListener('keydown', event => {
         var key = String.fromCharCode(event.keyCode);
         switch(key) {
             case 'W':
+                if(yAdd <=1)
+                    yAdd += 0.1;
                 break;
             case 'A':
+                if(xAdd >= -1)
+                    xAdd += -0.1;
                 break;
             case 'S':
+                if(yAdd >= -1)
+                    yAdd += -0.1;
                 break;
             case 'D':
+                if(xAdd <= 1)
+                    xAdd += 0.1;
                 break;
         }
+        window.requestAnimationFrame(drawProgram(gl, canvas, depth, xAdd, yAdd));
     });
 }
 
-function drawProgram(gl, canvas, depth) {
+function drawProgram(gl, canvas, depth, xAdd, yAdd, newColors) {
     //Load the shader pair. 2nd arg is vertex shader, 3rd is frag shader
     ShaderUtils.loadFromFile(gl, "vshader.glsl", "fshader.glsl")
         .then((prog) => {
@@ -48,8 +56,14 @@ function drawProgram(gl, canvas, depth) {
             // Clear the color buffer
             gl.clear(gl.COLOR_BUFFER_BIT);
 
+            //Handles Translations
+            var u_Translation = gl.getUniformLocation(prog, 'u_Translation');
+            var u_Texture = gl.getUniformLocation(prog, 'u_Texture');
+            gl.uniform4f(u_Translation, xAdd, yAdd, 0.0, 0.0);
+            gl.uniform1i(u_Texture, 5);
 
-            // x1, y1, x2, y2, x3, y3
+
+    // x1, y1, x2, y2, x3, y3
             let vertices = [-0.8, -0.6, 0.7, -0.6, -0.5, 0.7];
             let a = [vertices[0], vertices[1]];
             let b = [vertices[2], vertices[3]];
@@ -83,6 +97,16 @@ function drawProgram(gl, canvas, depth) {
             /* number of vertices to draw */
 
         });
+}
+
+function animRedraw(time){
+
+    if(time - lastUpdate > 250) {
+
+        lastUpdate = time;
+    }
+
+    window.requestAnimFrame(animRedraw(time));
 }
 
 /**
