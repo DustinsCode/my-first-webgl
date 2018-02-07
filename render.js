@@ -1,31 +1,36 @@
 var xAdd = 0.0;
 var yAdd = 0.0;
 var time = Date.now();
+var lastUpdate = 0;
+var myColor;
 var newColors = [Math.random(),Math.random(),Math.random()];
+var canvas;
+var gl;
+var vertices;
 console.log(newColors);
 
 function main() {
 
-    var canvas = document.getElementById("my-canvas");
-
+    this.canvas = document.getElementById("my-canvas");
+    this.gl= WebGLUtils.setupWebGL(this.canvas);
     let depthSlider = document.getElementById("incr");
     let depth = depthSlider.value;
 
-    var gl = WebGLUtils.setupWebGL(canvas);
 
     // x1, y1, x2, y2, x3, y3
-    var vertices = [-0.8, -0.6, 0.7, -0.6, -0.5, 0.7];
-    let a = [vertices[0], vertices[1]];
-    let b = [vertices[2], vertices[3]];
-    let c = [vertices[4], vertices[5]];
-    vertices = createGasket(a, b, c, depth);
+    this.vertices = [-0.8, -0.6, 0.7, -0.6, -0.5, 0.7];
+    let a = [this.vertices[0], this.vertices[1]];
+    let b = [this.vertices[2], this.vertices[3]];
+    let c = [this.vertices[4], this.vertices[5]];
+    this.vertices = createGasket(a, b, c, depth);
 
-    drawProgram(gl, canvas, vertices);
-    //animRedraw(Date.now(), gl, canvas, depth);
+    drawProgram(this.gl, this.canvas, this.vertices);
+    requestAnimFrame(animRedraw);
     // noinspection JSAnnotator
     depthSlider.addEventListener('change', event => {
         depth = depthSlider.value;
-        drawProgram(gl, canvas, createGasket(a,b,c,depth));
+        this.vertices = createGasket(a,b,c,depth)
+        drawProgram(gl, canvas, this.vertices);
     });
 
     window.addEventListener('keydown', event => {
@@ -48,13 +53,15 @@ function main() {
                     xAdd += 0.1;
                 break;
         }
-        window.requestAnimationFrame(drawProgram(gl, canvas, vertices));
+        //newColors=[Math.random(), Math.random(), Math.random()];
+        drawProgram(gl, canvas, vertices);
+        //window.requestAnimationFrame(drawProgram(gl, canvas, vertices));
     });
 }
 
 function drawProgram(gl, canvas, vertices) {
     //Load the shader pair. 2nd arg is vertex shader, 3rd is frag shader
-    ShaderUtils.loadFromFile(gl, "vshader.glsl", "fshader.glsl")
+    ShaderUtils.loadFromFile(this.gl, "vshader.glsl", "fshader.glsl")
         .then((prog) => {
 
             gl.useProgram(prog);
@@ -66,7 +73,7 @@ function drawProgram(gl, canvas, vertices) {
 
             // Clear the color buffer
             gl.clear(gl.COLOR_BUFFER_BIT);
-            var myColor = gl.getUniformLocation(prog, 'colors');
+            myColor = gl.getUniformLocation(prog, 'colors');
             gl.uniform3fv(myColor, newColors);
 
             //Handles Translations
@@ -99,21 +106,22 @@ function drawProgram(gl, canvas, vertices) {
 
             gl.drawArrays(gl.TRIANGLES,
                 0, /* starting index in the array */
-                vertices.length / 2);
+                this.vertices.length / 2);
             /* number of vertices to draw */
 
         });
+    //window.requestAnimFrame(animRedraw);
 }
 
-function animRedraw(time, gl, canvas, depth){
-    var lastUpdate = 0;
+function animRedraw(time){
+
     if(time - lastUpdate > 250) {
         newColors = [Math.random(), Math.random(), Math.random()];
-        drawProgram(gl, canvas, depth);
+        console.log(newColors);
+        drawProgram(this.gl, this.canvas, this.vertices);
         lastUpdate = time;
     }
-
-    window.requestAnimFrame(animRedraw(Date.now()));
+    window.requestAnimFrame(animRedraw);
 }
 
 /**
