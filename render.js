@@ -7,6 +7,11 @@ var newColors = [Math.random(),Math.random(),Math.random()];
 var canvas;
 var gl;
 var vertices;
+var random = true;
+var p = 1.0;
+var pUp = false;
+var color1 = [170/256, 244/256, 66/256];
+var color2 = [244/256, 66/256, 173/256];
 console.log(newColors);
 
 function main() {
@@ -16,6 +21,7 @@ function main() {
     let depthSlider = document.getElementById("incr");
     let depth = depthSlider.value;
 
+    let animSelect = document.getElementById("menu");
 
     // x1, y1, x2, y2, x3, y3
     this.vertices = [-0.8, -0.6, 0.7, -0.6, -0.5, 0.7];
@@ -26,6 +32,14 @@ function main() {
 
     drawProgram(this.gl, this.canvas, this.vertices);
     requestAnimFrame(animRedraw);
+
+    animSelect.addEventListener('change', event => {
+       //console.log("change");
+        if(this.random === true)
+            this.random = false;
+        else
+            this.random = true;
+    });
     // noinspection JSAnnotator
     depthSlider.addEventListener('change', event => {
         depth = depthSlider.value;
@@ -53,7 +67,6 @@ function main() {
                     xAdd += 0.1;
                 break;
         }
-        //newColors=[Math.random(), Math.random(), Math.random()];
         drawProgram(gl, canvas, vertices);
         //window.requestAnimationFrame(drawProgram(gl, canvas, vertices));
     });
@@ -79,8 +92,6 @@ function drawProgram(gl, canvas, vertices) {
             //Handles Translations
             var u_Translation = gl.getUniformLocation(prog, 'u_Translation');
             gl.uniform4f(u_Translation, xAdd, yAdd, 0.0, 0.0);
-
-
 
             //Create WebGL Buffer and Populate
             // noinspection JSAnnotator
@@ -115,13 +126,45 @@ function drawProgram(gl, canvas, vertices) {
 
 function animRedraw(time){
 
-    if(time - lastUpdate > 250) {
-        newColors = [Math.random(), Math.random(), Math.random()];
-        console.log(newColors);
+    if(time - lastUpdate > 100) {
+        if(random){
+            newColors = [Math.random(), Math.random(), Math.random()];
+        }else{
+            newColors = interpolation();
+        }
         drawProgram(this.gl, this.canvas, this.vertices);
         lastUpdate = time;
     }
     window.requestAnimFrame(animRedraw);
+}
+
+function interpolation(){
+    if(this.pUp){
+        this.p += 0.05;
+    }else{
+        this.p -= 0.05
+    }
+
+
+    if(this.p <= 0.0){
+        this.pUp = true;
+        color1 = [Math.random(), Math.random(), Math.random()];
+    }else if(this.p >= 1.0){
+        color2 = [Math.random(), Math.random(), Math.random()];
+        this.pUp = false;
+    }
+    var r1 = color1[0];
+    var g1 = color1[1];
+    var b1 = color1[2];
+    var r2 = color2[0];
+    var g2 = color2[1];
+    var b2 = color2[2];
+
+    r = this.p*r1 + (1-this.p)*r2;
+    g = this.p*g1 + (1-this.p)*g2;
+    b = this.p*b1 + (1-this.p)*b2;
+
+    return [r, g, b];
 }
 
 /**
