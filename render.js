@@ -1,24 +1,31 @@
 var xAdd = 0.0;
 var yAdd = 0.0;
 var time = Date.now();
-//var newColors = [1,0,0]
 var newColors = [Math.random(),Math.random(),Math.random()];
 console.log(newColors);
 
 function main() {
-    // noinspection JSAnnotator
-    let canvas = document.getElementById("my-canvas");
+
+    var canvas = document.getElementById("my-canvas");
 
     let depthSlider = document.getElementById("incr");
     let depth = depthSlider.value;
 
     var gl = WebGLUtils.setupWebGL(canvas);
 
-    drawProgram(gl,canvas,depth);
+    // x1, y1, x2, y2, x3, y3
+    var vertices = [-0.8, -0.6, 0.7, -0.6, -0.5, 0.7];
+    let a = [vertices[0], vertices[1]];
+    let b = [vertices[2], vertices[3]];
+    let c = [vertices[4], vertices[5]];
+    vertices = createGasket(a, b, c, depth);
+
+    drawProgram(gl, canvas, vertices);
+    //animRedraw(Date.now(), gl, canvas, depth);
     // noinspection JSAnnotator
     depthSlider.addEventListener('change', event => {
         depth = depthSlider.value;
-        drawProgram(gl,canvas,depth);
+        drawProgram(gl, canvas, createGasket(a,b,c,depth));
     });
 
     window.addEventListener('keydown', event => {
@@ -41,11 +48,11 @@ function main() {
                     xAdd += 0.1;
                 break;
         }
-        window.requestAnimationFrame(drawProgram(gl, canvas, depth));
+        window.requestAnimationFrame(drawProgram(gl, canvas, vertices));
     });
 }
 
-function drawProgram(gl, canvas, depth) {
+function drawProgram(gl, canvas, vertices) {
     //Load the shader pair. 2nd arg is vertex shader, 3rd is frag shader
     ShaderUtils.loadFromFile(gl, "vshader.glsl", "fshader.glsl")
         .then((prog) => {
@@ -67,12 +74,7 @@ function drawProgram(gl, canvas, depth) {
             gl.uniform4f(u_Translation, xAdd, yAdd, 0.0, 0.0);
 
 
-    // x1, y1, x2, y2, x3, y3
-            let vertices = [-0.8, -0.6, 0.7, -0.6, -0.5, 0.7];
-            let a = [vertices[0], vertices[1]];
-            let b = [vertices[2], vertices[3]];
-            let c = [vertices[4], vertices[5]];
-            vertices = createGasket(a, b, c, depth);
+
             //Create WebGL Buffer and Populate
             // noinspection JSAnnotator
             let vertexBuff = gl.createBuffer();
@@ -103,19 +105,15 @@ function drawProgram(gl, canvas, depth) {
         });
 }
 
-function animRedraw(time){
+function animRedraw(time, gl, canvas, depth){
     var lastUpdate = 0;
     if(time - lastUpdate > 250) {
-        newColors = [getRandomRGB(), getRandomRGB(), getRandomRGB()];
-        drawProgram(gl, canvas, depth, xAdd, yAdd);
-        lastUpdate = Date.now();
+        newColors = [Math.random(), Math.random(), Math.random()];
+        drawProgram(gl, canvas, depth);
+        lastUpdate = time;
     }
 
     window.requestAnimFrame(animRedraw(Date.now()));
-}
-
-function getRandomRGB(){
-    return Math.floor(Math.random() * Math.floor(256))/256;
 }
 
 /**
