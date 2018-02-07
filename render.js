@@ -1,20 +1,24 @@
+var xAdd = 0.0;
+var yAdd = 0.0;
+var time = Date.now();
+//var newColors = [1,0,0]
+var newColors = [Math.random(),Math.random(),Math.random()];
+console.log(newColors);
+
 function main() {
     // noinspection JSAnnotator
     let canvas = document.getElementById("my-canvas");
 
     let depthSlider = document.getElementById("incr");
     let depth = depthSlider.value;
-    //setupWebGL is defined in webgl-utils.js
-    // noinspection JSAnnotator
-    var gl = WebGLUtils.setupWebGL(canvas);
-    var xAdd = 0.0;
-    var yAdd = 0.0;
 
-    drawProgram(gl,canvas,depth, xAdd, yAdd);
+    var gl = WebGLUtils.setupWebGL(canvas);
+
+    drawProgram(gl,canvas,depth);
     // noinspection JSAnnotator
     depthSlider.addEventListener('change', event => {
         depth = depthSlider.value;
-        drawProgram(gl,canvas,depth, xAdd, yAdd);
+        drawProgram(gl,canvas,depth);
     });
 
     window.addEventListener('keydown', event => {
@@ -37,11 +41,11 @@ function main() {
                     xAdd += 0.1;
                 break;
         }
-        window.requestAnimationFrame(drawProgram(gl, canvas, depth, xAdd, yAdd));
+        window.requestAnimationFrame(drawProgram(gl, canvas, depth));
     });
 }
 
-function drawProgram(gl, canvas, depth, xAdd, yAdd, newColors) {
+function drawProgram(gl, canvas, depth) {
     //Load the shader pair. 2nd arg is vertex shader, 3rd is frag shader
     ShaderUtils.loadFromFile(gl, "vshader.glsl", "fshader.glsl")
         .then((prog) => {
@@ -55,12 +59,12 @@ function drawProgram(gl, canvas, depth, xAdd, yAdd, newColors) {
 
             // Clear the color buffer
             gl.clear(gl.COLOR_BUFFER_BIT);
+            var myColor = gl.getUniformLocation(prog, 'colors');
+            gl.uniform3fv(myColor, newColors);
 
             //Handles Translations
             var u_Translation = gl.getUniformLocation(prog, 'u_Translation');
-            var u_Texture = gl.getUniformLocation(prog, 'u_Texture');
             gl.uniform4f(u_Translation, xAdd, yAdd, 0.0, 0.0);
-            gl.uniform1i(u_Texture, 5);
 
 
     // x1, y1, x2, y2, x3, y3
@@ -100,13 +104,18 @@ function drawProgram(gl, canvas, depth, xAdd, yAdd, newColors) {
 }
 
 function animRedraw(time){
-
+    var lastUpdate = 0;
     if(time - lastUpdate > 250) {
-
-        lastUpdate = time;
+        newColors = [getRandomRGB(), getRandomRGB(), getRandomRGB()];
+        drawProgram(gl, canvas, depth, xAdd, yAdd);
+        lastUpdate = Date.now();
     }
 
-    window.requestAnimFrame(animRedraw(time));
+    window.requestAnimFrame(animRedraw(Date.now()));
+}
+
+function getRandomRGB(){
+    return Math.floor(Math.random() * Math.floor(256))/256;
 }
 
 /**
