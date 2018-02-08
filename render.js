@@ -14,6 +14,12 @@ var color1 = [170/256, 244/256, 66/256];
 var color2 = [244/256, 66/256, 173/256];
 console.log(newColors);
 
+/**
+* Some code from http://www.informit.com/articles/article.aspx?p=2111395&seqNum=3
+* was used as a reference to figure out how translations work.
+*
+* @author Dustin Thurston
+**/
 function main() {
 
     this.canvas = document.getElementById("my-canvas");
